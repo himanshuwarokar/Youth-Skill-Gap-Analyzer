@@ -12,11 +12,20 @@ const PORT = process.env.PORT || 5000;
 
 connectDB();
 
+const normalizeOrigin = (value = "") => value.trim().replace(/\/+$/, "");
+const configuredOrigins = [
+  process.env.CLIENT_URL || "",
+  ...(process.env.CLIENT_URLS || "").split(","),
+]
+  .map(normalizeOrigin)
+  .filter(Boolean);
+
 app.use(
   cors({
     origin(origin, callback) {
       const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || "");
-      const isAllowedClientUrl = !!process.env.CLIENT_URL && origin === process.env.CLIENT_URL;
+      const normalizedOrigin = normalizeOrigin(origin || "");
+      const isAllowedClientUrl = configuredOrigins.includes(normalizedOrigin);
 
       if (!origin || isLocalhost || isAllowedClientUrl) {
         callback(null, true);
@@ -39,13 +48,11 @@ app.use("/api/roadmap", roadmapRoutes);
 
 app.use((err, req, res, next) => {
   if (err && err.message === "Not allowed by CORS") {
-    return res.status(403).json({ message: "CORS blocked this origin. Use localhost/127.0.0.1 or update CLIENT_URL." });
+    return res.status(403).json({
+      message: "CORS blocked this origin. Use localhost/127.0.0.1 or update CLIENT_URL/CLIENT_URLS.",
+    });
   }
   return next(err);
-});
-
-app.get("/", (req, res) => {
-  res.send("Backend is running");
 });
 
 app.listen(PORT, () => {
