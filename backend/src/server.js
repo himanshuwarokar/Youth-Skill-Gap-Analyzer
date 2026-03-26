@@ -19,6 +19,8 @@ const configuredOrigins = [
 ]
   .map(normalizeOrigin)
   .filter(Boolean);
+const allowVercelPreviewOrigins = (process.env.ALLOW_VERCEL_PREVIEWS || "true").toLowerCase() !== "false";
+const isVercelAppOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
 
 app.use(
   cors({
@@ -26,8 +28,9 @@ app.use(
       const isLocalhost = /^http:\/\/(localhost|127\.0\.0\.1)(:\d+)?$/i.test(origin || "");
       const normalizedOrigin = normalizeOrigin(origin || "");
       const isAllowedClientUrl = configuredOrigins.includes(normalizedOrigin);
+      const isAllowedVercelPreview = allowVercelPreviewOrigins && isVercelAppOrigin(normalizedOrigin);
 
-      if (!origin || isLocalhost || isAllowedClientUrl) {
+      if (!origin || isLocalhost || isAllowedClientUrl || isAllowedVercelPreview) {
         callback(null, true);
         return;
       }
@@ -53,10 +56,6 @@ app.use((err, req, res, next) => {
     });
   }
   return next(err);
-});
-
-app.get("/", (req, res) => {
-  res.send("Backend is running 🚀");
 });
 
 app.listen(PORT, () => {
