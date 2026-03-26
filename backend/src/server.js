@@ -2,6 +2,7 @@ require("dotenv").config();
 
 const express = require("express");
 const cors = require("cors");
+const mongoose = require("mongoose");
 const connectDB = require("./config/db");
 const authRoutes = require("./routes/authRoutes");
 const profileRoutes = require("./routes/profileRoutes");
@@ -45,7 +46,17 @@ app.use(
 app.use(express.json());
 
 app.get("/api/health", (req, res) => {
-  res.json({ status: "ok", service: "Youth Skill Gap Analyzer API" });
+  const dbStateMap = {
+    0: "disconnected",
+    1: "connected",
+    2: "connecting",
+    3: "disconnecting",
+  };
+  res.json({
+    status: "ok",
+    service: "Youth Skill Gap Analyzer API",
+    db: dbStateMap[mongoose.connection.readyState] || "unknown",
+  });
 });
 
 app.use("/api/auth", authRoutes);

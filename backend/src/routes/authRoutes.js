@@ -1,11 +1,21 @@
 const express = require("express");
 const bcrypt = require("bcryptjs");
 const jwt = require("jsonwebtoken");
+const mongoose = require("mongoose");
 const User = require("../models/User");
 
 const router = express.Router();
 
-router.post("/register", async (req, res) => {
+const ensureDatabaseReady = (req, res, next) => {
+  if (mongoose.connection.readyState !== 1) {
+    return res.status(503).json({
+      message: "Database is not connected yet. Please retry in a few seconds.",
+    });
+  }
+  return next();
+};
+
+router.post("/register", ensureDatabaseReady, async (req, res) => {
   try {
     const { name, email, password } = req.body;
 
@@ -34,7 +44,7 @@ router.post("/register", async (req, res) => {
   }
 });
 
-router.post("/login", async (req, res) => {
+router.post("/login", ensureDatabaseReady, async (req, res) => {
   try {
     const { email, password } = req.body;
 
@@ -68,7 +78,7 @@ router.post("/login", async (req, res) => {
   }
 });
 
-router.post("/forgot-password", async (req, res) => {
+router.post("/forgot-password", ensureDatabaseReady, async (req, res) => {
   try {
     const { email, newPassword } = req.body;
 
