@@ -1,5 +1,6 @@
 const envUrl = import.meta.env.VITE_API_URL?.trim();
 const API_URL = envUrl || "/api";
+const isProduction = import.meta.env.PROD;
 
 export const api = {
   async request(path, options = {}) {
@@ -20,7 +21,13 @@ export const api = {
         headers,
       });
     } catch (error) {
-      throw new Error("Unable to connect to server. Please ensure backend is running on port 5001.");
+      const likelyMissingApiEnv = isProduction && API_URL.startsWith("/");
+      const hint = likelyMissingApiEnv
+        ? "VITE_API_URL is missing in production. Set it to your Render backend URL ending with /api."
+        : "Check backend availability, HTTPS URL, and CORS CLIENT_URL/CLIENT_URLS.";
+      throw new Error(
+        `Unable to connect to server at ${API_URL}${path}. ${hint} ${error?.message ? `(${error.message})` : ""}`.trim()
+      );
     }
 
     const contentType = response.headers.get("content-type") || "";
