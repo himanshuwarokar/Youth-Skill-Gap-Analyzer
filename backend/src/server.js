@@ -20,7 +20,9 @@ const configuredOrigins = [
   .map(normalizeOrigin)
   .filter(Boolean);
 const allowVercelPreviewOrigins = (process.env.ALLOW_VERCEL_PREVIEWS || "true").toLowerCase() !== "false";
+const hasConfiguredOrigins = configuredOrigins.length > 0;
 const isVercelAppOrigin = (origin) => /^https:\/\/[a-z0-9-]+\.vercel\.app$/i.test(origin);
+const isHttpOrigin = (origin) => /^https?:\/\/.+/i.test(origin);
 
 app.use(
   cors({
@@ -29,8 +31,9 @@ app.use(
       const normalizedOrigin = normalizeOrigin(origin || "");
       const isAllowedClientUrl = configuredOrigins.includes(normalizedOrigin);
       const isAllowedVercelPreview = allowVercelPreviewOrigins && isVercelAppOrigin(normalizedOrigin);
+      const isAllowedByFallback = !hasConfiguredOrigins && isHttpOrigin(normalizedOrigin);
 
-      if (!origin || isLocalhost || isAllowedClientUrl || isAllowedVercelPreview) {
+      if (!origin || isLocalhost || isAllowedClientUrl || isAllowedVercelPreview || isAllowedByFallback) {
         callback(null, true);
         return;
       }
