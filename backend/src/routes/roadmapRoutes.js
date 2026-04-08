@@ -40,7 +40,7 @@ router.post("/generate", authMiddleware, async (req, res) => {
       preferredLearningMode,
     },
     roadmap,
-    mlHook: "yaha ml model dalna hai.",
+    mlHook: "ML model will added here.",
   });
 });
 
